@@ -15,10 +15,14 @@ class ViewController: UIViewController {
     var audioFile: AVAudioFile!
     var audioPlayerNode: AVAudioPlayerNode!
     
+    var FileName:String = ""
+    
+    @IBOutlet var recordButton: UIButton!
+    
  override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
-
+    
         let session = AVAudioSession.sharedInstance()
         session.requestRecordPermission { granted in
             if granted{
@@ -54,11 +58,41 @@ class ViewController: UIViewController {
     @IBAction func record(_ sender: Any) {
         if !audioRecorder.isRecording {
             audioRecorder.record()
+            let image = UIImage(systemName: "stop.circle")
+                       recordButton.setImage(image, for: UIControl.State.normal)
+                       recordButton.imageView?.contentMode = .scaleAspectFit
         } else {
             audioRecorder.stop()
+            let image2 = UIImage(systemName: "mic.circle")
+            recordButton.setImage(image2, for: UIControl.State.normal)
+            recordButton.imageView?.contentMode = .scaleAspectFit
+            Dialog()
         }
     }
 
+    func Dialog(){
+        let Dialog = UIAlertController(title: "保存するファイル名を入力してください", message: "", preferredStyle: .alert)
+        let ok = UIAlertAction(title: "OK", style: .default, handler: {[Dialog](action) -> Void in
+            guard let textFields = Dialog.textFields else{
+                return
+            }
+            guard !textFields.isEmpty else{
+                return
+            }
+
+            self.FileName = textFields[0].text!
+        })
+        let cancel = UIAlertAction(title: "キャンセル", style: .cancel, handler: nil)
+        let image = UIImage(systemName: "mic.circle")
+        recordButton.setImage(image, for: UIControl.State.normal)
+        recordButton.imageView?.contentMode = .scaleAspectFit
+        Dialog.addTextField(configurationHandler: nil)
+        
+        Dialog.addAction(ok)
+        Dialog.addAction(cancel)
+        present(Dialog, animated: true,completion: nil)
+    }
+    
     @IBAction func play(_ sender: Any) {
         audioEngine = AVAudioEngine()
         do {
@@ -81,7 +115,8 @@ class ViewController: UIViewController {
     func getAudioFileUrl() -> URL {
         let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
         let docsDirect = paths[0]
-        let audioUrl = docsDirect.appendingPathComponent("recording.m4a")
+        
+        let audioUrl = docsDirect.appendingPathComponent(FileName + ".m4a")
 
         return audioUrl
     }
